@@ -13,7 +13,7 @@ var kubernodes = new Termoil;
         var project     = this.get('project'); //grab positional argument for project
         var repo        = this.get('repo') + '/' || process.env.KUBERNODES_REPO + '/' || ''; //check for optional repo, else: use env var
         var cmd         = this.get('cmd');
-        var remainder   = this.get('_remainder');
+        var remainder   = this.get('_remainder') || [];
         var docker_flags = [];
         if( cmd == 'bq' ){
             if( remainder[remainder.length-1] == 'shell' ){
