@@ -14,17 +14,19 @@ var kubernodes = new Termoil;
         var repo        = this.get('repo') + '/' || process.env.KUBERNODES_REPO + '/' || ''; //check for optional repo, else: use env var
         var cmd         = this.get('cmd');
         var remainder   = this.get('_remainder') || [];
-        var docker_flags = [];
+        var docker_flags = {};
         if( typeof process.stdin.isTTY === "undefined" ){
-            docker_flags.push('i');
+            docker_flags.i = true;
         }
         if( cmd == 'bq' ){
             if( remainder[remainder.length-1] == 'shell' ){
-                docker_flags = docker_flags.concat(['i', 't']);
+                docker_flags.i = true;
+                docker_flags.t = true;
             }
         }
         if( cmd == 'kubectl' && (remainder.indexOf('exec') > -1 || remainder.indexOf('logs') > -1) ){
-            docker_flags.concat(['i', 't']);
+            docker_flags.i = true;
+            docker_flags.t = true;
             if( remainder[remainder.length-1] == 'bash' || remainder[remainder.length-1] == 'sh' ){
                 var term = remainder.pop();
                 remainder.push('--');
@@ -34,8 +36,8 @@ var kubernodes = new Termoil;
             }
         }
         var args = ['run'];
-        if( docker_flags.length ){
-            args.push('-' + docker_flags.join(''));
+        if( Object.keys(docker_flags).length ){
+            args.push('-' + Object.keys(docker_flags).join(''));
         }
         args.push(repo + project + 'kube');
         args.push(cmd);
