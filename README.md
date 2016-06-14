@@ -17,7 +17,7 @@ __Step 2__: Create a Google Cloud Service Account
     2. Service Account ID: *Client Email ID*
     3.  Check the box "Furnish a new private key"
     4.  Click the "Create" button
-    5. Save the downloaded json file in your working dir: ./.keys/[PROJECT]_service_key.json
+    5. Save the downloaded json file in your working dir: `./.keys/[PROJECT]_service_key.json`
 
 __Step 3__: Generate your first Dockerfile
 
