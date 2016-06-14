@@ -1,6 +1,6 @@
 {
   "name": "kubernodes",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Google Cloud expansion with focus on kubectl",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
