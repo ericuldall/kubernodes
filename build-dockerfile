@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+
+function dockerfile(opts){
+    var Dockerfile = 'FROM ubuntu:14.04' + "\n\n"
+    + 'RUN rm /bin/sh && ln -s /bin/bash /bin/sh' + "\n"
+    + 'RUN apt-get update && apt-get install curl python -y' + "\n"
+    + 'RUN curl https://sdk.cloud.google.com | bash' + "\n"
+    + 'RUN source ~/.bashrc' + "\n\n"
+
+    + 'COPY bin/gcloud /usr/bin/gcloud' + "\n"
+    + 'COPY bin/bq /usr/bin/bq' + "\n"
+    + 'COPY bin/gsutil /usr/bin/gsutil' + "\n"
+    + 'COPY bin/kubeprd /usr/bin/kubeprd' + "\n"
+    + 'COPY bin/kubestg /usr/bin/kubestg' + "\n"
+    + 'COPY bin/kubectl /usr/bin/kubectl' + "\n\n"
+
+    + 'ENV GOOGLE_PROJECT ' + opts.project + "\n"
+    + 'ENV GOOGLE_CLIENT_EMAIL gcloud-docker@${GOOGLE_PROJECT}.iam.gserviceaccount.com' + "\n"
+    + 'ENV GOOGLE_CLUSTER_ZONE ' + opts.zone + "\n"
+    + 'ENV GOOGLE_CLUSTER_NAME ' + opts.cluster + "\n\n"
+
+    + 'COPY .keys/${GOOGLE_PROJECT}_service_key.json service_key.json' + "\n\n"
+
+    + 'RUN /root/google-cloud-sdk/bin/gcloud config set project $GOOGLE_PROJECT' + "\n"
+    + 'RUN /root/google-cloud-sdk/bin/gcloud auth activate-service-account $GOOGLE_CLIENT_EMAIL --key-file service_key.json' + "\n"
+    + 'RUN /root/google-cloud-sdk/bin/gcloud components install kubectl' + "\n"
+    + 'RUN /root/google-cloud-sdk/bin/gcloud config set compute/zone $GOOGLE_CLUSTER_ZONE' + "\n"
+    + 'RUN /root/google-cloud-sdk/bin/gcloud config set container/cluster $GOOGLE_CLUSTER_NAME' + "\n"
+    + 'RUN /root/google-cloud-sdk/bin/gcloud container clusters get-credentials $GOOGLE_CLUSTER_NAME';
+
+    return Dockerfile;
+}
+
+var Termoil = require('termoil');
+var kubernodes = new Termoil;
+    kubernodes.name('KuberNodes Dockerfile Builder');
+    kubernodes.instructions('kn-dockerfile [options]');
+    kubernodes.addVersion(new Termoil.Version('1.0', true));
+    kubernodes.addOption(new Termoil.Option(['-p', '--project'], 'project', new Termoil.Option.Type('value', true), 'Google Cloud Project'));
+    kubernodes.addOption(new Termoil.Option(['-z', '--zone'], 'zone', new Termoil.Option.Type('value', true), 'Google Compute Cluster Zone'));
+    kubernodes.addOption(new Termoil.Option(['-c', '--cluster'], 'cluster', new Termoil.Option.Type('value', true), 'Google Compute Cluster Name'));
+    kubernodes.on('parsed', function(){
+        process.stdout.write(dockerfile(this.get()));
+    }).parse(Termoil.Skip(process.argv, 2));

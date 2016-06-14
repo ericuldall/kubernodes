@@ -1,0 +1,4 @@
+#!/bin/bash
+for file in .*.docker;
+do docker push $1/${file:1:${#file}-8}:latest;
+done;

@@ -2,7 +2,6 @@
   "name": "kubernodes",
   "version": "1.0.0",
   "description": "Google Cloud expansion with focus on kubectl",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +11,12 @@
     "type": "git",
     "url": "git+ssh://git@github.com/ericuldall/kubernodes.git"
   },
+  "bin": {
+    "kn": "./kn",
+    "kn-dockerfile": "./build-dockerfile",
+    "kn-build": "./build-images",
+    "kn-push": "./push-images"
+  },
   "keywords": [
     "kubernetes",
     "k8s",
@@ -20,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/ericuldall/kubernodes/issues"
   },
-  "homepage": "https://github.com/ericuldall/kubernodes#readme"
+  "homepage": "https://github.com/ericuldall/kubernodes#readme",
+  "dependencies": {
+    "termoil": "^1.1.4"
+  }
 }
