@@ -15,13 +15,16 @@ var kubernodes = new Termoil;
         var cmd         = this.get('cmd');
         var remainder   = this.get('_remainder') || [];
         var docker_flags = [];
+        if( typeof process.stdin.isTTY === "undefined" ){
+            docker_flags.push('i');
+        }
         if( cmd == 'bq' ){
             if( remainder[remainder.length-1] == 'shell' ){
                 docker_flags = docker_flags.concat(['i', 't']);
             }
         }
         if( cmd == 'kubectl' && (remainder.indexOf('exec') > -1 || remainder.indexOf('logs') > -1) ){
-            docker_flags.push('it');
+            docker_flags.concat(['i', 't']);
             if( remainder[remainder.length-1] == 'bash' || remainder[remainder.length-1] == 'sh' ){
                 var term = remainder.pop();
                 remainder.push('--');
