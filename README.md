@@ -17,13 +17,13 @@ __Step 2__: Create a Google Cloud Service Account
     2. Service Account ID: *Client Email ID*
     3.  Check the box "Furnish a new private key"
     4.  Click the "Create" button
-    5. Save the downloaded json file in your working dir: `./.keys/[PROJECT]_service_key.json`
+    5. Save the downloaded json file in your working dir: `./.keys/[GCLOUD_PROJECT_ID]_service_key.json`
 
 __Step 3__: Generate your first Dockerfile
 
 *Run the following code in your cli*
 ```
-kn-dockerfile -p build-id -z compute-zone -c cluster-name > .[BUILD-ID]kube.docker
+kn-dockerfile -p [GCLOUD_PROJECT_ID] -z [COMPUTE_ZONE] -c [CLUSTER_NAME] > .[KN_PROJECT_NAME]kube.docker
 
 //example
 kn-dockerfile -p sites -z us-central1-b -c kubernetes > .siteskube.docker
