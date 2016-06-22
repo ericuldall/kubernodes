@@ -11,7 +11,8 @@ var kubernodes = new Termoil;
     kubernodes.addOption(new Termoil.Option('2', 'cmd', null, 'Command', 'kubectl', function(val){ return val.toLowerCase(); }));
     kubernodes.on('parsed', function(){
         var project     = this.get('project'); //grab positional argument for project
-        var repo        = this.get('repo') + '/' || process.env.KUBERNODES_REPO + '/' || ''; //check for optional repo, else: use env var
+        var repo        = this.get('repo') || process.env.KUBERNODES_REPO || ''; //check for optional repo, else: use env var
+            repo        = repo.length ? repo + '/' : '';
         var cmd         = this.get('cmd');
         var remainder   = this.get('_remainder') || [];
         var docker_flags = {};
