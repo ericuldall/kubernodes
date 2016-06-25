@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 function dockerfile(opts){
     var Dockerfile = 'FROM ubuntu:14.04' + "\n\n"
     + 'RUN rm /bin/sh && ln -s /bin/bash /bin/sh' + "\n"
