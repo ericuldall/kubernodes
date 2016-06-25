@@ -39,16 +39,16 @@ kn-build [DOCKERHUB_USER/ORGANIZATION]
 __Step 5__: Run some commands
 ```
 //get all k8s pods
-kn project -r [DOCKERHUB_USER/ORG] -- get pods
+kn [KN_PROJECT_NAME] -r [DOCKERHUB_USER/ORG] -- get pods
 
 //exec into a pod
-kn project -r [DOCKERHUB_USER/ORG] -- exec -it [POD_NAME] bash
+kn [KN_PROJECT_NAME] -r [DOCKERHUB_USER/ORG] -- exec -it [POD_NAME] bash
 
 //run a query in big query
-kn project -r [DOCKERHUB_USER/ORG] bq -- query 'select count(*) from publicdata:samples.shakespeare'
+kn [KN_PROJECT_NAME] -r [DOCKERHUB_USER/ORG] bq -- query 'select count(*) from publicdata:samples.shakespeare'
 
 //enter a big query interactive shell
-kn project -r [DOCKERHUB_USER/ORG] bq -- shell
+kn [KN_PROJECT_NAME] -r [DOCKERHUB_USER/ORG] bq -- shell
 ```
 
-__Step 6__: Do you.
+__Step 6__: Enjoy easily switching between all of your google projects, with Kubernodes!
