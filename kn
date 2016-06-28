@@ -62,8 +62,12 @@ var kubernodes = new Termoil;
 
     function runDockerWatch(args){
             var docker = spawn('docker', args);
-            process.stdout.write('\033[2J');
+            var cleared = false;
             docker.stdout.on('data', function(data){
+                if( !cleared ){
+                    process.stdout.write('\u001B[2J\u001B[0;0f');
+                    cleared = true;
+                }
                 process.stdout.write(data.toString());
             });
 
