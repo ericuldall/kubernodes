@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/ericuldall/kubernodes#readme",
   "dependencies": {
+    "chalk": "^1.1.3",
     "termoil": "^1.1.4"
   }
 }
