@@ -63,7 +63,7 @@ export KUBERNODES_REPO=[DOCKERHUB_USER/ORGANIZATION]
 
 __Kubernodes Watch Mode__: For commands that don't require tty or stdin you can use kubernodes watch mode. Watch mode will overtake your terminal and refresh the ouptut of your command every (n) seconds.
 
+*Here's how to watch your pods with a 5 second refresh rate*
 ```
-#Here's how watch your pods with a 5 second refresh rate
 kn [KN_PROJECT_NAME] --watch 5 -- get pods
 ```
