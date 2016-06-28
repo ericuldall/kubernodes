@@ -6,9 +6,11 @@ var kubernodes = new Termoil;
     kubernodes.instructions('kn <project> [options]');
     kubernodes.addVersion(new Termoil.Version('1.0', true));
     kubernodes.addOption(new Termoil.Option('0', 'project', null, 'Project Name', 'default', function(val){ return val.toLowerCase(); }));
-    kubernodes.addOption(new Termoil.Option(['-r', '--repo'], 'repo', new Termoil.Option.Type('value'), 'Docker Repository/Organization'));
     kubernodes.addOption(new Termoil.Option('1', 'cmd', null, 'Command', 'kubectl', function(val){ return val.toLowerCase(); }));
     kubernodes.addOption(new Termoil.Option('2', 'cmd', null, 'Command', 'kubectl', function(val){ return val.toLowerCase(); }));
+    kubernodes.addOption(new Termoil.Option('3', 'cmd', null, 'Command', 'kubectl', function(val){ return val.toLowerCase(); }));
+    kubernodes.addOption(new Termoil.Option(['-r', '--repo'], 'repo', new Termoil.Option.Type('value'), 'Docker Repository/Organization'));
+    kubernodes.addOption(new Termoil.Option(['-w', '--watch'], 'watch', new Termoil.Option.Type('value'), 'Watch command (refresh output automatically'), '10');
     kubernodes.on('parsed', function(){
         var project     = this.get('project'); //grab positional argument for project
         var repo        = this.get('repo') || process.env.KUBERNODES_REPO || ''; //check for optional repo, else: use env var
@@ -43,10 +45,31 @@ var kubernodes = new Termoil;
         args.push(repo + project + 'kube');
         args.push(cmd);
         args = args.concat(remainder);
-        var docker = spawn('docker', args,
-            {
-                shell: true,
-                stdio: 'inherit'
-            }
-        );
+        if( this.get('watch') && !docker_flags.hasOwnProperty('i') && !docker_flags.hasOwnProperty('t') ){
+            var docker = runDockerWatch(args);
+            setInterval(function(){
+                docker = runDockerWatch(args);
+            }, parseInt(this.get('watch')) * 1000);
+        }else{
+            var docker = spawn('docker', args,
+                {
+                    shell: true,
+                    stdio: 'inherit'
+                }
+            );
+        }
     }).parse(Termoil.Skip(process.argv, 2));
+
+    function runDockerWatch(args){
+            var docker = spawn('docker', args);
+            process.stdout.write('\033[2J');
+            docker.stdout.on('data', function(data){
+                process.stdout.write(data.toString());
+            });
+
+            docker.stderr.on('data', function(data){
+                process.stderr.write(data.toString());
+            });
+
+            return docker;
+    }
