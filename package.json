@@ -20,7 +20,13 @@
   "keywords": [
     "kubernetes",
     "k8s",
-    "gcloud"
+    "gcloud",
+    "docker",
+    "bq",
+    "big query",
+    "gsutil",
+    "gcs",
+    "google cloud"
   ],
   "bugs": {
     "url": "https://github.com/ericuldall/kubernodes/issues"
