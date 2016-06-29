@@ -2,7 +2,7 @@
 
 A convenience wrapper for kubectl, gcloud, gsutil and bq command line utils
 
-### !! Requires (Docker)[https://www.docker.com/] !!
+### !! Requires [Docker](https://www.docker.com/) !!
 
 ##Getting Started Guide
 
