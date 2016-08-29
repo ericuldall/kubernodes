@@ -16,13 +16,15 @@ function dockerfile(opts){
     + 'ENV GOOGLE_PROJECT ' + opts.project + "\n"
     + 'ENV GOOGLE_CLIENT_EMAIL gcloud-docker@${GOOGLE_PROJECT}.iam.gserviceaccount.com' + "\n"
     + 'ENV GOOGLE_CLUSTER_ZONE ' + opts.zone + "\n"
-    + 'ENV GOOGLE_CLUSTER_NAME ' + opts.cluster + "\n\n"
+    + 'ENV GOOGLE_CLUSTER_NAME ' + opts.cluster + "\n"
+    + 'ENV GOOGL_APPLICATION_CREDENTIALS /service_key.json' + "\n\n"
 
     + 'COPY .keys/${GOOGLE_PROJECT}_service_key.json service_key.json' + "\n\n"
 
+    + 'RUN /root/google-cloud-sdk/bin/gcloud components install kubectl alpha' + "\n"
+    + 'RUN /root/google-cloud-sdk/bin/gcloud components update' + "\n"
     + 'RUN /root/google-cloud-sdk/bin/gcloud config set project $GOOGLE_PROJECT' + "\n"
     + 'RUN /root/google-cloud-sdk/bin/gcloud auth activate-service-account $GOOGLE_CLIENT_EMAIL --key-file service_key.json' + "\n"
-    + 'RUN /root/google-cloud-sdk/bin/gcloud components install kubectl' + "\n"
     + 'RUN /root/google-cloud-sdk/bin/gcloud config set compute/zone $GOOGLE_CLUSTER_ZONE' + "\n"
     + 'RUN /root/google-cloud-sdk/bin/gcloud config set container/cluster $GOOGLE_CLUSTER_NAME' + "\n"
     + 'RUN /root/google-cloud-sdk/bin/gcloud container clusters get-credentials $GOOGLE_CLUSTER_NAME';
