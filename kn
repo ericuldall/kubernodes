@@ -39,7 +39,7 @@ var kubernodes = new Termoil;
                 remainder.push('export COLUMNS=' + process.stdout.columns + ' && export LINES=' + process.stdout.rows + ' && ' + term); 
             }
         }
-        var args = ['run'];
+        var args = ['run', '--net=host'];
         if( Object.keys(docker_flags).length ){
             args.push('-' + Object.keys(docker_flags).join(''));
         }
@@ -88,8 +88,10 @@ var kubernodes = new Termoil;
             if( watcher ){
                 clearInterval(watcher);
             }
-            exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker rm", function(err, stdout, stderr){
-                process.exit();
+            exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker kill", function(err, stdout, stderr){
+                exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker rm", function(err, stdout, stderr){
+                    process.exit();
+                });
             });
         });
 
