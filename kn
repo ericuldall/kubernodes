@@ -28,7 +28,7 @@ var kubernodes = new Termoil;
                 docker_flags.t = true;
             }
         }
-        if( cmd == 'kubectl' && (remainder.indexOf('exec') > -1 || remainder.indexOf('logs') > -1) ){
+        if( cmd == 'kubectl' && (remainder.indexOf('exec') > -1 || remainder.indexOf('logs') > -1 || remainder.indexOf('edit') > -1 ) ){
             docker_flags.i = true;
             docker_flags.t = true;
             if( remainder[remainder.length-1] == 'bash' || remainder[remainder.length-1] == 'sh' ){
