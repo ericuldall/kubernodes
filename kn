@@ -44,6 +44,8 @@ var kubernodes = new Termoil;
         if( Object.keys(docker_flags).length ){
             args.push('-' + Object.keys(docker_flags).join(''));
         }
+        args.push('-e');
+        args.push('TERM=xterm');
         if( this.get('editor') ){
             args.push('-e')
             args.push('EDITOR=' + this.get('editor'));
