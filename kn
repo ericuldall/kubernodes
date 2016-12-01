@@ -4,108 +4,114 @@ var spawn = require('child_process').spawn;
 var exec  = require('child_process').exec;
 var Termoil = require('termoil');
 var kubernodes = new Termoil;
-    kubernodes.name('KuberNodes');
-    kubernodes.instructions('kn <project> [options]');
-    kubernodes.addVersion(new Termoil.Version('1.0', true));
-    kubernodes.addOption(new Termoil.Option('0', 'project', null, 'Project Name', 'default', function(val){ return val.toLowerCase(); }));
-    kubernodes.addOption(new Termoil.Option('1', 'cmd', null, 'Command', 'kubectl', function(val){ return val.toLowerCase(); }));
-    kubernodes.addOption(new Termoil.Option('2', 'cmd', null, 'Command', 'kubectl', function(val){ return val.toLowerCase(); }));
-    kubernodes.addOption(new Termoil.Option(['-w', '--watch'], 'watch', new Termoil.Option.Type('value'), 'Watch command (refresh output automatically'), '10');
-    kubernodes.addOption(new Termoil.Option(['-e', '--editor'], 'editor', new Termoil.Option.Type('value'), 'Set editor to use for interactive prompts'));
-    kubernodes.on('parsed', function(){
-        var container_history = [];
-        var project     = this.get('project'); //grab positional argument for project
-        var repo        = this.get('repo') || process.env.KUBERNODES_REPO || ''; //check for optional repo, else: use env var
-            repo        = repo.length ? repo + '/' : '';
-        var cmd         = this.get('cmd');
-        var remainder   = this.get('_remainder') || [];
-        var docker_flags = {};
-        if( typeof process.stdin.isTTY === "undefined" ){
-            docker_flags.i = true;
-        }
-        if( cmd == 'bq' ){
-            if( remainder[remainder.length-1] == 'shell' ){
-                docker_flags.i = true;
-                docker_flags.t = true;
-            }
-        }
-        if( cmd == 'kubectl' && (remainder.indexOf('exec') > -1 || remainder.indexOf('logs') > -1 || remainder.indexOf('edit') > -1 ) ){
-            docker_flags.i = true;
-            docker_flags.t = true;
-            if( remainder[remainder.length-1] == 'bash' || remainder[remainder.length-1] == 'sh' ){
-                var term = remainder.pop();
-                remainder.push('--');
-                remainder.push('/bin/bash');
-                remainder.push('-c');
-                remainder.push('export COLUMNS=' + process.stdout.columns + ' && export LINES=' + process.stdout.rows + ' && ' + term); 
-            }
-        }
-        var args = ['run', '--net=host'];
-        if( Object.keys(docker_flags).length ){
-            args.push('-' + Object.keys(docker_flags).join(''));
-        }
-        args.push('-e');
-        args.push('TERM=xterm');
-        if( this.get('editor') ){
-            args.push('-e')
-            args.push('EDITOR=' + this.get('editor'));
-        }
-        args.push(repo + project + 'kube');
-        args.push(cmd);
-        args = args.concat(remainder);
-        
-        var watcher = false;
-        if( this.get('watch') && !docker_flags.hasOwnProperty('i') && !docker_flags.hasOwnProperty('t') ){
-            var docker = runDockerWatch(args);
-            watcher = setInterval(function(){
-                docker = runDockerWatch(args);
-            }, parseInt(this.get('watch')) * 1000);
-        }else{
-            var docker = spawn('docker', args,
-                {
-                    shell: true,
-                    stdio: 'inherit'
-                }
-            );
-        }
+kubernodes.name('KuberNodes');
+kubernodes.instructions('kn <project> [options]');
+kubernodes.addVersion(new Termoil.Version('1.0', true));
+kubernodes.addOption(new Termoil.Option('0', 'project', null, 'Project Name', 'default', function(val){ return val.toLowerCase(); }));
+kubernodes.addOption(new Termoil.Option('1', 'cmd', null, 'Command', 'kubectl', function(val){ return val.toLowerCase(); }));
+kubernodes.addOption(new Termoil.Option('2', 'cmd', null, 'Command', 'kubectl', function(val){ return val.toLowerCase(); }));
+kubernodes.addOption(new Termoil.Option(['-w', '--watch'], 'watch', new Termoil.Option.Type('value'), 'Watch command (refresh output automatically'), '10');
+kubernodes.addOption(new Termoil.Option(['-e', '--editor'], 'editor', new Termoil.Option.Type('value'), 'Set editor to use for interactive prompts'));
+kubernodes.addOption(new Termoil.Option(['-r', '--repo'], 'repo', new Termoil.Option.Type('value'), 'Set dockerhub repo name'));
+kubernodes.on('parsed', function(){
+	// clean up old containers from this image on exit
+	process.on('exit', cleanup);
+	process.on('SIGINT', function(){
+		if( watcher ){
+			clearInterval(watcher);
+		}
+		exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker kill", function(err, stdout, stderr){
+			exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker rm", function(err, stdout, stderr){
+				process.exit();
+			});
+		});
+	});
 
-        function runDockerWatch(args){
-                var docker = spawn('docker', args);
-                var cleared = false;
-                docker.stdout.on('data', function(data){
-                    if( !cleared ){
-                        //process.stdout.write('\u001B[2J\u001B[0;0f');
-                        process.stdout.write('\33c');
-                        process.stdout.write(chalk.white.bgBlack.bold('Kubernodes Watch (' + project + '): ' + cmd + ' ' + remainder.join(' ')));
-                        process.stdout.write('\n\n');
-                        cleared = true;
-                    }
-                    process.stdout.write(data.toString());
-                });
+	function cleanup(){
+		exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker rm", function(err, stdout, stderr){
+			console.log(err, stdout, stderr);
+		});
+	}
+	var container_history = [];
+	var project = this.get('project'); //grab positional argument for project
+	var repo = this.get('repo') || process.env.KUBERNODES_REPO || ''; //check for optional repo, else: use env var
+	repo = repo.length ? repo + '/' : '';
+	var cmd = this.get('cmd');
+	var remainder = this.get('_remainder') || [];
+	var docker_flags = {};
+	if( typeof process.stdin.isTTY === "undefined" ){
+		docker_flags.i = true;
+	}
+	if( cmd == 'bq' ){
+		if( remainder[remainder.length-1] == 'shell' ){
+			docker_flags.i = true;
+			docker_flags.t = true;
+		}
+	}
+	if( cmd == 'kubectl' && (remainder.indexOf('exec') > -1 || remainder.indexOf('logs') > -1 || remainder.indexOf('edit') > -1 ) ){
+		docker_flags.i = true;
+		docker_flags.t = true;
+		if( remainder[remainder.length-1] == 'bash' || remainder[remainder.length-1] == 'sh' ){
+			var term = remainder.pop();
+			remainder.push('--');
+			remainder.push('/bin/bash');
+			remainder.push('-c');
+			remainder.push('export COLUMNS=' + process.stdout.columns + ' && export LINES=' + process.stdout.rows + ' && ' + term); 
+		}
+	}
+	var args = ['run', '--net=host'];
+	if( Object.keys(docker_flags).length ){
+		args.push('-' + Object.keys(docker_flags).join(''));
+	}
+	args.push('-e');
+	args.push('TERM=xterm');
+	if( this.get('editor') ){
+		args.push('-e');
+		args.push('EDITOR=' + this.get('editor'));
+	}
+	args.push(repo + project + 'kube');
+	
+	if( cmd == 'proxy' ){
+		args = args.concat(["kubectl", "proxy", "--accept-hosts=.*", "--accept-paths=.*", "--address=0.0.0.0"]);
+		var docker = spawn('docker', args, {shell: true, stdio: 'inherit'});
 
-                docker.stderr.on('data', function(data){
-                    process.stderr.write(data.toString());
-                });
+		return;
+	}
 
-                return docker;
-        }
-        // clean up old containers from this image on exit
-        process.on('exit', cleanup);
-        process.on('SIGINT', function(){
-            if( watcher ){
-                clearInterval(watcher);
-            }
-            exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker kill", function(err, stdout, stderr){
-                exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker rm", function(err, stdout, stderr){
-                    process.exit();
-                });
-            });
-        });
+	args.push(cmd);
+	args = args.concat(remainder);
+	var watcher = false;
+	if( this.get('watch') && !docker_flags.hasOwnProperty('i') && !docker_flags.hasOwnProperty('t') ){
+		var docker = runDockerWatch(args);
+		watcher = setInterval(function(){
+			docker = runDockerWatch(args);
+		}, parseInt(this.get('watch')) * 1000);
+	}else{
+		var docker = spawn('docker', args,
+		{
+			shell: true,
+			stdio: 'inherit'
+		});
+	}
 
-        function cleanup(){
-           exec("docker ps -a | grep '" + repo + project + "kube' | awk '{print $1}' | xargs --no-run-if-empty docker rm", function(err, stdout, stderr){
-                console.log(err, stdout, stderr);
-           });
-        }
-    }).parse(Termoil.Skip(process.argv, 2));
+	function runDockerWatch(args){
+		var docker = spawn('docker', args);
+		var cleared = false;
+		docker.stdout.on('data', function(data){
+			if( !cleared ){
+				//process.stdout.write('\u001B[2J\u001B[0;0f');
+				process.stdout.write('\33c');
+				process.stdout.write(chalk.white.bgBlack.bold('Kubernodes Watch (' + project + '): ' + cmd + ' ' + remainder.join(' ')));
+				process.stdout.write('\n\n');
+				cleared = true;
+			}
+			process.stdout.write(data.toString());
+		});
 
+		docker.stderr.on('data', function(data){
+			process.stderr.write(data.toString());
+		});
+
+		return docker;
+	}
+}).parse(Termoil.Skip(process.argv, 2));
