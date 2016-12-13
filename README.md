@@ -69,3 +69,10 @@ __Kubernodes Watch Mode__: For commands that don't require tty or stdin you can 
 ```
 kn [KN_PROJECT_NAME] --watch 5 -- get pods
 ```
+
+__Kubernodes Proxy__: We've made the kubectl proxy command easitly accesible as a positional argument in kubernodes. It currently allows all paths and binds to all ip's by default and is not configurable via this shortcut, but can still be invoked as you normally would any `kn` command.
+
+*Start your proxy*
+```
+kn [KN_PROJECT_NAME] proxy
+```
