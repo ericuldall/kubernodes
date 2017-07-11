@@ -48,6 +48,10 @@ kubernodes.on('parsed', function(){
 			docker_flags.t = true;
 		}
 	}
+	if( cmd == 'gcloud'  && (remainder.indexOf('ssh') > -1) ){
+		docker_flags.i = true;
+		docker_flags.t =  true;
+	}
 	if( cmd == 'kubectl' && (remainder.indexOf('exec') > -1 || remainder.indexOf('logs') > -1 || remainder.indexOf('edit') > -1 ) ){
 		docker_flags.i = true;
 		docker_flags.t = true;
