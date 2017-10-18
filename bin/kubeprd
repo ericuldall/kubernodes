@@ -1,2 +1,0 @@
-#!/bin/bash
-/root/google-cloud-sdk/bin/kubectl --namespace=prod "$@"

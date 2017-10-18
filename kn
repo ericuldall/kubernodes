@@ -2,6 +2,7 @@
 var chalk = require('chalk');
 var spawn = require('child_process').spawn;
 var exec  = require('child_process').exec;
+var execSync = require('child_process').execSync;
 var Termoil = require('termoil');
 var kubernodes = new Termoil;
 kubernodes.name('KuberNodes');
@@ -13,6 +14,8 @@ kubernodes.addOption(new Termoil.Option('2', 'cmd', null, 'Command', 'kubectl', 
 kubernodes.addOption(new Termoil.Option(['-w', '--watch'], 'watch', new Termoil.Option.Type('value'), 'Watch command (refresh output automatically'), '10');
 kubernodes.addOption(new Termoil.Option(['-e', '--editor'], 'editor', new Termoil.Option.Type('value'), 'Set editor to use for interactive prompts'));
 kubernodes.addOption(new Termoil.Option(['-r', '--repo'], 'repo', new Termoil.Option.Type('value'), 'Set dockerhub repo name'));
+kubernodes.addOption(new Termoil.Option(['-c', '--cluster'], 'cluster', new Termoil.Option.Type('value'), 'Set name of cluster to use (must be in the same project)'));
+kubernodes.addOption(new Termoil.Option(['--namespace'], 'namespace', new Termoil.Option.Type('value'), 'Set namespace for special lookups'));
 kubernodes.on('parsed', function(){
 	// clean up old containers from this image on exit
 	process.on('exit', cleanup);
@@ -39,6 +42,9 @@ kubernodes.on('parsed', function(){
 	var cmd = this.get('cmd');
 	var remainder = this.get('_remainder') || [];
 	var docker_flags = {};
+	if( this.has('cluster') ){
+		var cluster_info = execSync('docker run --net=host ' + repo + project + 'kube' + ' gcloud container clusters list --filter="cron-cluster" 2> /dev/null | tail -n +2 | head -n 1').toString('ascii').replace(/\s+/g, ' ').split(' ');
+	}
 	if( typeof process.stdin.isTTY === "undefined" ){
 		docker_flags.i = true;
 	}
@@ -78,6 +84,24 @@ kubernodes.on('parsed', function(){
 	if( cmd == 'proxy' ){
 		args = args.concat(["kubectl", "proxy", "--accept-hosts=.*", "--accept-paths=.*", "--address=0.0.0.0"]);
 		var docker = spawn('docker', args, {shell: true, stdio: 'inherit'});
+
+		return;
+	}
+
+	if( cmd.match('get:') ){
+		var lookup = cmd.split(':');
+		var lookup_commands = {
+			get: {
+				"pods-by-node": ["kubectl", "get", "pod", "--namespace=" + (this.get('namespace') || 'default'), "-o", "jsonpath='{range .items[*]}{.metadata.name}: {.spec.nodeName}|{end}'", "|", "tr", "'|'", "'\\n'"],
+				"session-affinity-by-service": ["kubectl", "get", "service", "--namespace=" + (this.get('namespace') || 'default'), "-o", "jsonpath='{range .items[*]}{.metadata.name}: {.spec.sessionAffinity}|{end}'", "|", "tr", "'|'", "'\\n'"]
+			}
+		};
+
+		args = 'docker ' + args.join(' ') + ' ' + lookup_commands[lookup[0]][lookup[1]].join(' ');
+		var docker  = exec(args, function(err, stdout, stderr){
+			process.stderr.write(stderr);
+			process.stdout.write(stdout);
+		});
 
 		return;
 	}
