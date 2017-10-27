@@ -93,7 +93,8 @@ kubernodes.on('parsed', function(){
 		var lookup_commands = {
 			get: {
 				"pods-by-node": ["kubectl", "get", "pod", "--namespace=" + (this.get('namespace') || 'default'), "-o", "jsonpath='{range .items[*]}{.metadata.name}: {.spec.nodeName}|{end}'", "|", "tr", "'|'", "'\\n'"],
-				"session-affinity-by-service": ["kubectl", "get", "service", "--namespace=" + (this.get('namespace') || 'default'), "-o", "jsonpath='{range .items[*]}{.metadata.name}: {.spec.sessionAffinity}|{end}'", "|", "tr", "'|'", "'\\n'"]
+				"session-affinity-by-service": ["kubectl", "get", "service", "--namespace=" + (this.get('namespace') || 'default'), "-o", "jsonpath='{range .items[*]}{.metadata.name}: {.spec.sessionAffinity}|{end}'", "|", "tr", "'|'", "'\\n'"],
+				"deployment-node-selector": ["kubectl", "get", "deployment", "--namespace=" + (this.get('namespace') || 'default'), "-o", "jsonpath='{range .items[*]}{.metadata.name}: {.spec.template.spec.nodeSelector}|{end}'", "|", "tr", "'|'", "'\\n'"]
 			}
 		};
 
